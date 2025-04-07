@@ -948,7 +948,7 @@ d &lt;- WaffleDivorce
 # Standardize the data
 d$D &lt;- standardize(d$Divorce)
 d$W &lt;- standardize(d$WaffleHouses)
-d$S &lt;- standardize(d$South)
+d$S &lt;- d$South
 d$M &lt;- standardize(d$Marriage)
 d$A &lt;- standardize(d$MedianAgeMarriage)
 
@@ -979,22 +979,22 @@ m6H1 &lt;- quap(
     mu &lt;- a + b_w * W + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
     b_w ~ dnorm(0, 0.5), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
 
 precis(m6H1)</code></pre>
-<pre><code>##                mean         sd        5.5%     94.5%
-## a     -7.293085e-06 0.10911717 -0.17439761 0.1743830
-## b_w    5.244823e-02 0.16588090 -0.21266149 0.3175579
-## b_s    2.891621e-01 0.16594866  0.02394405 0.5543801
-## sigma  9.206734e-01 0.09087369  0.77543973 1.0659071</code></pre>
-<p>WaffleHouses has MAP 0.05 (-0.21 to 0.32 at 5.5% and 94.5%
+<pre><code>##              mean         sd        5.5%      94.5%
+## a     -0.11641964 0.12976423 -0.32380794 0.09096866
+## b_w    0.06547832 0.16373439 -0.19620086 0.32715751
+## b_s    0.59268706 0.35341487  0.02786184 1.15751228
+## sigma  0.92245406 0.09123211  0.77664754 1.06826059</code></pre>
+<p>WaffleHouses has MAP 0.07 (-0.20 to 0.33 at 5.5% and 94.5%
 quantiles). This suggests that the total effect of WaffleHouses on
 Divorce is roughly zero, however with uncertainty to both positive and
 negative sides. Most of the variance is taken up by being in the south
-(MAP 0.29, 0.02 to 0.55 at 5.5% and 94.5% quantiles).</p>
+(MAP 0.59, 0.03 to 0.1.16 at 5.5% and 94.5% quantiles).</p>
 <p><strong>6H2</strong>. Build a series of models to test the implied
 conditional independencies of the causal graph you used in the previous
 problem. If any of the tests fail, how do you think the graph needs to
@@ -1012,7 +1012,7 @@ m6H2.1 &lt;- quap(
     A ~ dnorm(mu, sigma),
     mu &lt;- a + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -1023,26 +1023,26 @@ m6H2.2 &lt;- quap(
     A ~ dnorm(mu, sigma),
     mu &lt;- a + b_s * S + b_w * W,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     b_w ~ dnorm(0, 0.5), # Everything is standardized
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
 
 precis(m6H2.1)</code></pre>
-<pre><code>##                mean         sd       5.5%       94.5%
-## a     -7.179968e-08 0.11153769 -0.1782588  0.17825869
-## b_s   -2.310299e-01 0.13103474 -0.4404487 -0.02161111
-## sigma  9.501719e-01 0.09371754  0.8003932  1.09995064</code></pre>
+<pre><code>##              mean         sd       5.5%       94.5%
+## a      0.09402414 0.12444367 -0.1048609  0.29290917
+## b_s   -0.48763510 0.28296387 -0.9398660 -0.03540418
+## sigma  0.95132046 0.09395967  0.8011548  1.10148615</code></pre>
 <pre class="r"><code>precis(m6H2.2)</code></pre>
-<pre><code>##                mean         sd       5.5%         94.5%
-## a     -0.0000112851 0.11135954 -0.1779853  1.779628e-01
-## b_s   -0.2719324571 0.17012911 -0.5438316 -3.327308e-05
-## b_w    0.0637406932 0.17006634 -0.2080582  3.355396e-01
-## sigma  0.9479716522 0.09355887  0.7984465  1.097497e+00</code></pre>
+<pre><code>##              mean         sd       5.5%     94.5%
+## a      0.10740133 0.13190941 -0.1034154 0.3182180
+## b_s   -0.55656645 0.36220669 -1.1354427 0.0223098
+## b_w    0.05117944 0.16785458 -0.2170846 0.3194435
+## sigma  0.94973022 0.09389454  0.7996686 1.0997918</code></pre>
 <p>We see that including W in the model slightly lowers the MAP of S
-from -0.23 to -0.27 while the MAP of W is 0.06 but with a large
-uncertainty (-0.21 to 0.34 at 5.5% and 94.5% quantiles). This suggests
+from -0.49 to -0.56 while the MAP of W is 0.05 but with a large
+uncertainty (-0.22 to 0.32 at 5.5% and 94.5% quantiles). This suggests
 that the model is not very sensitive to the inclusion of W, and thus the
 independence assumption mostly holds.</p>
 <pre class="r"><code># Test D _||_ S | A, M, W
@@ -1069,7 +1069,7 @@ m6H2.4 &lt;- quap(
     b_a ~ dnorm(0, 0.5), # Everything is standardized
     b_m ~ dnorm(0, 0.5), # Everything is standardized
     b_w ~ dnorm(0, 0.5), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -1083,18 +1083,18 @@ precis(m6H2.3)</code></pre>
 ## b_w    1.782119e-01 0.10774095  0.006021048  0.3504027
 ## sigma  7.650664e-01 0.07584178  0.643856625  0.8862763</code></pre>
 <pre class="r"><code>precis(m6H2.4)</code></pre>
-<pre><code>##                mean         sd       5.5%      94.5%
-## a      5.538633e-05 0.09456102 -0.1510714  0.1511822
-## b_a   -5.512196e-01 0.15154802 -0.7934226 -0.3090166
-## b_m   -3.633586e-02 0.14737580 -0.2718708  0.1991991
-## b_w    8.655256e-02 0.14049839 -0.1379910  0.3110961
-## b_s    1.451518e-01 0.14437465 -0.0855868  0.3758904
-## sigma  7.588203e-01 0.07519783  0.6386396  0.8790009</code></pre>
+<pre><code>##              mean        sd       5.5%      94.5%
+## a     -0.06491037 0.1158628 -0.2500815  0.1202608
+## b_a   -0.55349482 0.1513294 -0.7953485 -0.3116412
+## b_m   -0.03723533 0.1473700 -0.2727611  0.1982905
+## b_w    0.09274326 0.1385417 -0.1286731  0.3141596
+## b_s    0.29863863 0.3075471 -0.1928810  0.7901582
+## sigma  0.75907132 0.0752610  0.6387897  0.8793529</code></pre>
 <p>We see that including S in the model lowers the MAP of W from 0.18 to
-0.09. The rest other estimates hardly change. The MAP of S is 0.15 but
-with a large uncertainty (-0.09 to 0.38 at 5.5% and 94.5% quantiles).
-This suggests that the model is somewhat sensitive to the inclusion of
-S, and thus the independence assumption does not hold.</p>
+0.09. The rest other estimates hardly change. The MAP of S is 0.30 but
+with a large uncertainty (-0.19 to 0.79 at 5.5% and 94.5% quantiles).
+This suggests that the model is sensitive to the inclusion of S, and
+thus the independence assumption does not hold.</p>
 <pre class="r"><code># Test M _||_ W | S
 
 # M ~ S
@@ -1103,7 +1103,7 @@ m6H2.5 &lt;- quap(
     M ~ dnorm(mu, sigma),
     mu &lt;- a + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -1114,26 +1114,26 @@ m6H2.6 &lt;- quap(
     M ~ dnorm(mu, sigma),
     mu &lt;- a + b_s * S + b_w * W,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     b_w ~ dnorm(0, 0.5), # Everything is standardized
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
 
 precis(m6H2.5)</code></pre>
-<pre><code>##               mean         sd       5.5%     94.5%
-## a     8.359664e-09 0.11369075 -0.1816998 0.1816998
-## b_s   7.588077e-02 0.13445546 -0.1390050 0.2907666
-## sigma 9.771486e-01 0.09631616  0.8232167 1.1310804</code></pre>
+<pre><code>##              mean        sd       5.5%     94.5%
+## a     -0.03040034 0.1263055 -0.2322609 0.1714602
+## b_s    0.15984272 0.2899998 -0.3036329 0.6233183
+## sigma  0.97724357 0.0963346  0.8232823 1.1312049</code></pre>
 <pre class="r"><code>precis(m6H2.6)</code></pre>
-<pre><code>##                mean         sd       5.5%     94.5%
-## a      5.668277e-08 0.11363584 -0.1816120 0.1816121
-## b_s    1.006653e-01 0.17425226 -0.1778235 0.3791541
-## b_w   -3.892028e-02 0.17424383 -0.3173956 0.2395550
-## sigma  9.764515e-01 0.09626037  0.8226089 1.1302942</code></pre>
+<pre><code>##              mean         sd       5.5%     94.5%
+## a     -0.03910306 0.13364939 -0.2527006 0.1744945
+## b_s    0.20627124 0.37046632 -0.3858055 0.7983480
+## b_w   -0.03439813 0.17176997 -0.3089197 0.2401235
+## sigma  0.97670649 0.09630719  0.8227890 1.1306240</code></pre>
 <p>We see that including W in the model leads to a small increase on the
-MAP of S from 0.08 to 0.10. The MAP for W is -0.04, however for both S
-and W the uncertainty is quite large (-18 to 0.38 and -0.32 to 0.24
+MAP of S from 0.16 to 0.21. The MAP for W is -0.03, however for both S
+and W the uncertainty is quite large (-0.39 to 0.80 and -0.31 to 0.24
 respectively at 5.5% and 94.5% quantiles). This suggests that the model
 is not very sensitive to the inclusion of W, and thus the independence
 assumption mostly holds.</p>

@@ -2,7 +2,9 @@
 title: "Assignment 2 - Methods 4"
 author: "Laurits Lyngbaek"
 date: "2025-03-18"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 # Second assignment
 The second assignment uses chapter 3, 5 and 6. The focus of the assignment is getting an understanding of causality.
@@ -489,7 +491,7 @@ d <- WaffleDivorce
 # Standardize the data
 d$D <- standardize(d$Divorce)
 d$W <- standardize(d$WaffleHouses)
-d$S <- standardize(d$South)
+d$S <- d$South
 d$M <- standardize(d$Marriage)
 d$A <- standardize(d$MedianAgeMarriage)
 
@@ -521,14 +523,14 @@ m6H1 <- quap(
     mu <- a + b_w * W + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
     b_w ~ dnorm(0, 0.5), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
 
 precis(m6H1)
 ```
-WaffleHouses has MAP 0.05 (-0.21 to 0.32 at 5.5% and 94.5% quantiles). This suggests that the total effect of WaffleHouses on Divorce is roughly zero, however with uncertainty to both positive and negative sides. Most of the variance is taken up by being in the south (MAP 0.29, 0.02 to 0.55 at 5.5% and 94.5% quantiles).
+WaffleHouses has MAP 0.07 (-0.20 to 0.33 at 5.5% and 94.5% quantiles). This suggests that the total effect of WaffleHouses on Divorce is roughly zero, however with uncertainty to both positive and negative sides. Most of the variance is taken up by being in the south (MAP 0.59, 0.03 to 0.1.16 at 5.5% and 94.5% quantiles).
 
 **6H2**. 
 Build a series of models to test the implied conditional independencies of the causal graph you used in the previous problem. If any of the tests fail, how do you think the graph needs to be amended? Does the graph need more or fewer arrows? Feel free to nominate variables that aren't in the data.
@@ -544,7 +546,7 @@ m6H2.1 <- quap(
     A ~ dnorm(mu, sigma),
     mu <- a + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -555,7 +557,7 @@ m6H2.2 <- quap(
     A ~ dnorm(mu, sigma),
     mu <- a + b_s * S + b_w * W,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     b_w ~ dnorm(0, 0.5), # Everything is standardized
     sigma ~ dexp(1) # sd must be positive
   ), data = d
@@ -564,7 +566,7 @@ m6H2.2 <- quap(
 precis(m6H2.1)
 precis(m6H2.2)
 ```
-We see that including W in the model slightly lowers the MAP of S from -0.23 to -0.27 while the MAP of W is 0.06 but with a large uncertainty (-0.21 to 0.34 at 5.5% and 94.5% quantiles). This suggests that the model is not very sensitive to the inclusion of W, and thus the independence assumption mostly holds.
+We see that including W in the model slightly lowers the MAP of S from -0.49 to -0.56 while the MAP of W is 0.05 but with a large uncertainty (-0.22 to 0.32 at 5.5% and 94.5% quantiles). This suggests that the model is not very sensitive to the inclusion of W, and thus the independence assumption mostly holds.
 
 ```{r}
 # Test D _||_ S | A, M, W
@@ -591,7 +593,7 @@ m6H2.4 <- quap(
     b_a ~ dnorm(0, 0.5), # Everything is standardized
     b_m ~ dnorm(0, 0.5), # Everything is standardized
     b_w ~ dnorm(0, 0.5), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -601,7 +603,7 @@ precis(m6H2.3)
 precis(m6H2.4)
 ```
 
-We see that including S in the model lowers the MAP of W from 0.18 to 0.09. The rest other estimates hardly change. The MAP of S is 0.15 but with a large uncertainty (-0.09 to 0.38 at 5.5% and 94.5% quantiles). This suggests that the model is somewhat sensitive to the inclusion of S, and thus the independence assumption does not hold.
+We see that including S in the model lowers the MAP of W from 0.18 to 0.09. The rest other estimates hardly change. The MAP of S is 0.30 but with a large uncertainty (-0.19 to 0.79 at 5.5% and 94.5% quantiles). This suggests that the model is sensitive to the inclusion of S, and thus the independence assumption does not hold.
 
 
 ```{r}
@@ -613,7 +615,7 @@ m6H2.5 <- quap(
     M ~ dnorm(mu, sigma),
     mu <- a + b_s * S,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     sigma ~ dexp(1) # sd must be positive
   ), data = d
 )
@@ -624,7 +626,7 @@ m6H2.6 <- quap(
     M ~ dnorm(mu, sigma),
     mu <- a + b_s * S + b_w * W,
     a ~ dnorm(0, 0.2), # Everything is standardized
-    b_s ~ dnorm(0, 0.5), # Everything is standardized
+    b_s ~ dnorm(0, 10), # Southernness is 0 or 1
     b_w ~ dnorm(0, 0.5), # Everything is standardized
     sigma ~ dexp(1) # sd must be positive
   ), data = d
@@ -633,7 +635,7 @@ m6H2.6 <- quap(
 precis(m6H2.5)
 precis(m6H2.6)
 ```
-We see that including W in the model leads to a small increase on the MAP of S from 0.08 to 0.10. The MAP for W is -0.04, however for both S and W the uncertainty is quite large (-18 to 0.38 and -0.32 to 0.24 respectively at 5.5% and 94.5% quantiles). This suggests that the model is not very sensitive to the inclusion of W, and thus the independence assumption mostly holds.
+We see that including W in the model leads to a small increase on the MAP of S from 0.16 to 0.21. The MAP for W is -0.03, however for both S and W the uncertainty is quite large (-0.39 to 0.80 and -0.31 to 0.24 respectively at 5.5% and 94.5% quantiles). This suggests that the model is not very sensitive to the inclusion of W, and thus the independence assumption mostly holds.
 
 These three tests of conditional independencies suggest that we should reconsider the DAG. Especially the independence assumption of D _||_ S | A, M, W. This suggests there are other confounding variables between divorce and being in the Southern USA. One major unobserved confounder could be religion, which is prevalent in that region of the USA, while also having specific values regarding marriage/divorce tied in. Generally adding nodes and thus more arrows to a DAG is likely to make it more realistic with regard to the causal relationships (if done with some insight, not blindly/naively). This risk sacrificing practicality and explainability to gain realism.
 
